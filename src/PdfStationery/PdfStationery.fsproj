@@ -13,7 +13,7 @@
         <Compile Include="Program.fs" />
         <AvaloniaResource Include="**\*.xaml" />
     </ItemGroup>
-    
+
     <ItemGroup>
         <PackageReference Update="FSharp.Core" Version="4.7.1" />
         <PackageReference Include="Avalonia.Desktop" Version="0.9.0" />
@@ -23,9 +23,22 @@
         <PackageReference Include="JaggerJo.Avalonia.FuncUI.Elmish" Version="0.2.0" />
         <PackageReference Include="MessageBox.Avalonia" Version="0.9.0" />
         <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
+        <PackageReference Include="Dotnet.Bundle" Version="*" />
     </ItemGroup>
 
     <ItemGroup>
-        <EmbeddedResource Remove=".template.config\**" />
+      <Content Include="AppIcon.icns" />
     </ItemGroup>
+
+    <PropertyGroup>
+        <CFBundleName>PdfStationery</CFBundleName>
+        <CFBundleDisplayName>PdfStationery</CFBundleDisplayName>
+        <CFBundleIdentifier>de.snd.pdfstationery</CFBundleIdentifier>
+        <CFBundleVersion>1.0.0</CFBundleVersion>
+        <CFBundlePackageType>AAPL</CFBundlePackageType>
+        <CFBundleExecutable>PdfStationery</CFBundleExecutable>
+        <CFBundleIconFile>AppIcon.icns</CFBundleIconFile>
+        <NSPrincipalClass>NSApplication</NSPrincipalClass>
+        <NSHighResolutionCapable>true</NSHighResolutionCapable>
+    </PropertyGroup>
 </Project>
