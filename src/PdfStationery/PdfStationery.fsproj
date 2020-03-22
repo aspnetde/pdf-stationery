@@ -6,6 +6,7 @@
     </PropertyGroup>
 
     <ItemGroup>
+        <Compile Include="PdfMerge.fs" />
         <Compile Include="Stationery.fs" />
         <Compile Include="Program.fs" />
         <AvaloniaResource Include="**\*.xaml" />
@@ -14,6 +15,7 @@
     <ItemGroup>
         <PackageReference Update="FSharp.Core" Version="4.7.1" />
         <PackageReference Include="Avalonia.Desktop" Version="0.9.0" />
+        <PackageReference Include="iTextSharp-LGPL-Core" Version="1.1.0" />
         <PackageReference Include="JaggerJo.Avalonia.FuncUI" Version="0.2.0" />
         <PackageReference Include="JaggerJo.Avalonia.FuncUI.DSL" Version="0.2.0" />
         <PackageReference Include="JaggerJo.Avalonia.FuncUI.Elmish" Version="0.2.0" />

@@ -68,6 +68,7 @@ module Stationery =
                 return! dialog.ShowAsync(parent) |> Async.AwaitTask
             }
 
+
         let showMessage title header message icon =
             async {
                 let closeButton = ButtonDefinition()
@@ -99,12 +100,18 @@ module Stationery =
             showMessage "Success" "Great!" message Icon.Success
 
         let print model =
-            if model.ReplaceOriginal then Success "Your original PDF file has been decorated with your stationery."
-            else CmdSaveNewPdfDocument model.StationeryPdfPath
+            if model.ReplaceOriginal then
+                PdfMerge.replace model.OriginalPdfPath model.StationeryPdfPath
+                Success "Your original PDF file has been decorated with your stationery."
+            else
+                let tmpPath = PdfMerge.createNew model.OriginalPdfPath model.StationeryPdfPath
+                CmdSaveNewPdfDocument tmpPath
 
         let savePdf (path: string) =
             printfn "Saving: %s" path
-            Success (sprintf "Your PDF has been decorated with your stationery and saved as `%s`." (System.IO.Path.GetFileName(path)))
+            Success
+                (sprintf "Your PDF has been decorated with your stationery and saved as `%s`."
+                     (System.IO.Path.GetFileName(path)))
 
         let update msg model =
             match msg with
@@ -113,9 +120,7 @@ module Stationery =
             | OnOriginalPdfPathChanged path -> { model with OriginalPdfPath = path }, Cmd.none
             | CmdPrint -> model, Cmd.ofMsg (print model)
             | Success message ->
-                model,
-                Cmd.OfAsync.either showSuccess message
-                    (fun _ -> NoOp) (fun _ -> NoOp)
+                model, Cmd.OfAsync.either showSuccess message (fun _ -> NoOp) (fun _ -> NoOp)
             | CmdOpenStationeryFileDialog ->
                 model,
                 Cmd.OfAsync.either openFileDialog model.StationeryPdfPath OnStationaryPdfPathChanged OnExceptionThrown
@@ -123,8 +128,7 @@ module Stationery =
                 model,
                 Cmd.OfAsync.either openFileDialog model.OriginalPdfPath OnOriginalPdfPathChanged OnExceptionThrown
             | CmdSaveNewPdfDocument path ->
-                model,
-                Cmd.OfAsync.either openSaveDialog path savePdf OnExceptionThrown
+                model, Cmd.OfAsync.either openSaveDialog path savePdf OnExceptionThrown
             | OnExceptionThrown ex -> model, Cmd.OfAsync.either showError ex (fun _ -> NoOp) (fun _ -> NoOp)
             | NoOp -> model, Cmd.none
 
