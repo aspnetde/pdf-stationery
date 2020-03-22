@@ -23,6 +23,9 @@ module Stationery =
         | OnStationaryPdfPathChanged of path: string
         | OnOriginalPdfPathChanged of path: string
         | OnExceptionThrown of ex: Exception
+        | OnOriginalPdfReplaced
+        | CmdPrint
+        | CmdOpenNewPdfDocument of path: string
         | CmdOpenStationeryFileDialog
         | CmdOpenOriginalFileDialog
         | NoOp
@@ -55,7 +58,8 @@ module Stationery =
                        | _ -> failwith "Please select only a single PDF document."
             }
 
-        let showError (ex: Exception) =
+
+        let showMessage title header message icon =
             async {
                 let closeButton = ButtonDefinition()
                 closeButton.Type <- ButtonType.Default
@@ -64,10 +68,10 @@ module Stationery =
                 let windowParameters = MessageBoxCustomParams()
                 windowParameters.ShowInCenter <- true
                 windowParameters.CanResize <- true
-                windowParameters.ContentTitle <- "Error"
-                windowParameters.ContentHeader <- "Oops, something went wrong:"
-                windowParameters.ContentMessage <- ex.Message
-                windowParameters.Icon <- Icon.Error
+                windowParameters.ContentTitle <- title
+                windowParameters.ContentHeader <- header
+                windowParameters.ContentMessage <- message
+                windowParameters.Icon <- icon
                 windowParameters.ButtonDefinitions <- [ closeButton ]
 
                 let window =
@@ -79,17 +83,40 @@ module Stationery =
                 |> ignore
             }
 
+        let showError (ex: Exception) =
+            showMessage "Error" "Oops, something went wrong:" ex.Message Icon.Error
+
+        let showSuccess message =
+            showMessage "Success" "Great!" message Icon.Success
+
+        let print model =
+            if model.ReplaceOriginal then
+                OnOriginalPdfReplaced
+            else
+                CmdOpenNewPdfDocument model.StationeryPdfPath
+
+        let openFile (path: string) =
+            System.Diagnostics.Process.Start(path) |> ignore
+            NoOp
+        
         let update msg model =
             match msg with
             | ToggleReplaceOriginal -> { model with ReplaceOriginal = not model.ReplaceOriginal }, Cmd.none
             | OnStationaryPdfPathChanged path -> { model with StationeryPdfPath = path }, Cmd.none
             | OnOriginalPdfPathChanged path -> { model with OriginalPdfPath = path }, Cmd.none
+            | CmdPrint -> model, Cmd.ofMsg (print model)
+            | OnOriginalPdfReplaced ->
+                model,
+                Cmd.OfAsync.either showSuccess
+                    "Your original PDF file has been decorated with your stationery!" (fun _ -> NoOp)
+                    (fun _ -> NoOp)
             | CmdOpenStationeryFileDialog ->
                 model,
                 Cmd.OfAsync.either openFileDialog model.StationeryPdfPath OnStationaryPdfPathChanged OnExceptionThrown
             | CmdOpenOriginalFileDialog ->
                 model,
                 Cmd.OfAsync.either openFileDialog model.OriginalPdfPath OnOriginalPdfPathChanged OnExceptionThrown
+            | CmdOpenNewPdfDocument path -> model, Cmd.ofMsg (openFile path)
             | OnExceptionThrown ex -> model, Cmd.OfAsync.either showError ex (fun _ -> NoOp) (fun _ -> NoOp)
             | NoOp -> model, Cmd.none
 
@@ -151,6 +178,7 @@ module Stationery =
 
                                 Button.create
                                     [ Button.content "Print"
+                                      Button.onClick (fun _ -> dispatch CmdPrint)
                                       Button.isEnabled (model |> canPrint) ] ] ] ] ]
 
         do
