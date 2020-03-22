@@ -18,6 +18,14 @@ module Stationery =
           StationeryPdfPath: string
           OriginalPdfPath: string }
 
+    type SaveResult =
+        { OriginalPath: string
+          TmpPath: string }
+        
+    type Foo =
+        { TargetPath: string
+          TmpPath: string }
+
     type Msg =
         | ToggleReplaceOriginal
         | OnStationaryPdfPathChanged of path: string
@@ -59,13 +67,18 @@ module Stationery =
             }
 
 
-        let openSaveDialog (originalFileName: string) =
+
+        let openSaveDialog arguments =
             async {
                 let dialog = SaveFileDialog()
-                dialog.InitialFileName <- System.IO.Path.GetFileName originalFileName
-                dialog.Directory <- System.IO.Path.GetDirectoryName originalFileName
+                dialog.InitialFileName <- System.IO.Path.GetFileName arguments.OriginalPath
+                dialog.Directory <- System.IO.Path.GetDirectoryName arguments.OriginalPath
+                dialog.DefaultExtension <- "pdf"
 
-                return! dialog.ShowAsync(parent) |> Async.AwaitTask
+                let! result = dialog.ShowAsync(parent) |> Async.AwaitTask
+                return match result with
+                       | null -> None
+                       | path -> Some({ TargetPath = path; TmpPath = arguments.TmpPath })
             }
 
 
@@ -107,11 +120,15 @@ module Stationery =
                 let tmpPath = PdfMerge.createNew model.OriginalPdfPath model.StationeryPdfPath
                 CmdSaveNewPdfDocument tmpPath
 
-        let savePdf (path: string) =
-            printfn "Saving: %s" path
-            Success
-                (sprintf "Your PDF has been decorated with your stationery and saved as `%s`."
-                     (System.IO.Path.GetFileName(path)))
+        let savePdf (saveResult: Foo option) =
+            match saveResult with
+            | None -> NoOp
+            | Some result ->
+                printfn "Saving: %s" result.TargetPath
+                System.IO.File.Move(result.TmpPath, result.TargetPath, true)
+                Success
+                    (sprintf "Your PDF has been decorated with your stationery and saved as `%s`."
+                         (System.IO.Path.GetFileName(result.TargetPath)))
 
         let update msg model =
             match msg with
@@ -128,7 +145,7 @@ module Stationery =
                 model,
                 Cmd.OfAsync.either openFileDialog model.OriginalPdfPath OnOriginalPdfPathChanged OnExceptionThrown
             | CmdSaveNewPdfDocument path ->
-                model, Cmd.OfAsync.either openSaveDialog path savePdf OnExceptionThrown
+                model, Cmd.OfAsync.either openSaveDialog { OriginalPath = model.OriginalPdfPath; TmpPath = path } savePdf OnExceptionThrown
             | OnExceptionThrown ex -> model, Cmd.OfAsync.either showError ex (fun _ -> NoOp) (fun _ -> NoOp)
             | NoOp -> model, Cmd.none
 
