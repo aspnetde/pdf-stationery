@@ -11,14 +11,17 @@ let private print (sourcePath: string) (templatePath: string) outputPath =
 
     let sourceReader = PdfReader(sourcePath)
     let templateReader = PdfReader(templatePath)
-
+    
     document.Open()
     document.SetPageSize(sourceReader.GetPageSizeWithRotation(1)) |> ignore
-    document.NewPage() |> ignore
+        
+    for i = 1 to sourceReader.NumberOfPages do
+        document.NewPage() |> ignore
+        writer.DirectContent.AddTemplate(writer.GetImportedPage(sourceReader, i), 0.0f, 0.0f)
+        writer.DirectContent.AddTemplate(writer.GetImportedPage(templateReader, 1), 0.0f, 0.0f)
 
-    writer.DirectContent.AddTemplate(writer.GetImportedPage(sourceReader, 1), 0.0f, 0.0f)
-    writer.DirectContent.AddTemplate(writer.GetImportedPage(templateReader, 1), 0.0f, 0.0f)
-
+    sourceReader.Close()
+    templateReader.Close()
     document.Close()
     writer.Close()
     outputStream.Close()
