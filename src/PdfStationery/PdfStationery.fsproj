@@ -7,7 +7,8 @@
 
     <ItemGroup>
         <Compile Include="Config.fs" />
-        <Compile Include="PdfMerge.fs" />
+        <Compile Include="Dialogs.fs" />
+        <Compile Include="Printer.fs" />
         <Compile Include="Stationery.fs" />
         <Compile Include="Program.fs" />
         <AvaloniaResource Include="**\*.xaml" />
