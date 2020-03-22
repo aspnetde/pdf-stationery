@@ -23,9 +23,9 @@ module Stationery =
         | OnStationaryPdfPathChanged of path: string
         | OnOriginalPdfPathChanged of path: string
         | OnExceptionThrown of ex: Exception
-        | OnOriginalPdfReplaced
+        | Success of message: string
         | CmdPrint
-        | CmdOpenNewPdfDocument of path: string
+        | CmdSaveNewPdfDocument of path: string
         | CmdOpenStationeryFileDialog
         | CmdOpenOriginalFileDialog
         | NoOp
@@ -34,8 +34,8 @@ module Stationery =
 
         let init() =
             { ReplaceOriginal = false
-              StationeryPdfPath = ""
-              OriginalPdfPath = "" }, Cmd.none
+              StationeryPdfPath = "/Users/thomas/Downloads/template.pdf"
+              OriginalPdfPath = "/Users/thomas/Downloads/source.pdf" }, Cmd.none
 
         let canPrint model =
             not (String.IsNullOrWhiteSpace(model.StationeryPdfPath))
@@ -58,6 +58,15 @@ module Stationery =
                        | _ -> failwith "Please select only a single PDF document."
             }
 
+
+        let openSaveDialog (originalFileName: string) =
+            async {
+                let dialog = SaveFileDialog()
+                dialog.InitialFileName <- System.IO.Path.GetFileName originalFileName
+                dialog.Directory <- System.IO.Path.GetDirectoryName originalFileName
+
+                return! dialog.ShowAsync(parent) |> Async.AwaitTask
+            }
 
         let showMessage title header message icon =
             async {
@@ -90,33 +99,32 @@ module Stationery =
             showMessage "Success" "Great!" message Icon.Success
 
         let print model =
-            if model.ReplaceOriginal then
-                OnOriginalPdfReplaced
-            else
-                CmdOpenNewPdfDocument model.StationeryPdfPath
+            if model.ReplaceOriginal then Success "Your original PDF file has been decorated with your stationery."
+            else CmdSaveNewPdfDocument model.StationeryPdfPath
 
-        let openFile (path: string) =
-            System.Diagnostics.Process.Start(path) |> ignore
-            NoOp
-        
+        let savePdf (path: string) =
+            printfn "Saving: %s" path
+            Success (sprintf "Your PDF has been decorated with your stationery and saved as `%s`." (System.IO.Path.GetFileName(path)))
+
         let update msg model =
             match msg with
             | ToggleReplaceOriginal -> { model with ReplaceOriginal = not model.ReplaceOriginal }, Cmd.none
             | OnStationaryPdfPathChanged path -> { model with StationeryPdfPath = path }, Cmd.none
             | OnOriginalPdfPathChanged path -> { model with OriginalPdfPath = path }, Cmd.none
             | CmdPrint -> model, Cmd.ofMsg (print model)
-            | OnOriginalPdfReplaced ->
+            | Success message ->
                 model,
-                Cmd.OfAsync.either showSuccess
-                    "Your original PDF file has been decorated with your stationery!" (fun _ -> NoOp)
-                    (fun _ -> NoOp)
+                Cmd.OfAsync.either showSuccess message
+                    (fun _ -> NoOp) (fun _ -> NoOp)
             | CmdOpenStationeryFileDialog ->
                 model,
                 Cmd.OfAsync.either openFileDialog model.StationeryPdfPath OnStationaryPdfPathChanged OnExceptionThrown
             | CmdOpenOriginalFileDialog ->
                 model,
                 Cmd.OfAsync.either openFileDialog model.OriginalPdfPath OnOriginalPdfPathChanged OnExceptionThrown
-            | CmdOpenNewPdfDocument path -> model, Cmd.ofMsg (openFile path)
+            | CmdSaveNewPdfDocument path ->
+                model,
+                Cmd.OfAsync.either openSaveDialog path savePdf OnExceptionThrown
             | OnExceptionThrown ex -> model, Cmd.OfAsync.either showError ex (fun _ -> NoOp) (fun _ -> NoOp)
             | NoOp -> model, Cmd.none
 
