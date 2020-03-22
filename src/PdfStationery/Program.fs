@@ -11,10 +11,10 @@ type MainWindow() as this =
     do
         base.Title <- "PDF Stationery"
         base.SizeToContent <- SizeToContent.WidthAndHeight
-        
+
         Stationery.Program(this) |> ignore
         ()
-        
+
 type App() =
     inherit Application()
 
@@ -32,9 +32,8 @@ type App() =
 module Program =
 
     [<EntryPoint>]
-    let main(args: string[]) =
-        AppBuilder
-            .Configure<App>()
+    let main (args: string []) =
+        AppBuilder.Configure<App>()
             .UsePlatformDetect()
             .UseSkia()
             .StartWithClassicDesktopLifetime(args)

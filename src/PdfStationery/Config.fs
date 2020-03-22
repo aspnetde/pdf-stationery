@@ -1,7 +1,17 @@
+[<AutoOpen>]
 module PdfStationery.Config
 
 open System.IO
 open Newtonsoft.Json
+
+type ConfigValues =
+    { SourcePath: string
+      TemplatePath: string
+      ReplaceSource: bool }
+    static member Default =
+        { SourcePath = ""
+          TemplatePath = ""
+          ReplaceSource = false }
 
 let private getConfigPath() =
     Path.Combine(Directory.GetCurrentDirectory(), "config.json")

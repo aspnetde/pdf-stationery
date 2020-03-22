@@ -6,7 +6,6 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <Compile Include="Types.fs" />
         <Compile Include="Config.fs" />
         <Compile Include="PdfMerge.fs" />
         <Compile Include="Stationery.fs" />
