@@ -1,0 +1,16 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "PdfStationery", "PdfStationery\PdfStationery.fsproj", "{CE9D45C2-DBB9-44FF-B732-683FCA395FEB}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{CE9D45C2-DBB9-44FF-B732-683FCA395FEB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CE9D45C2-DBB9-44FF-B732-683FCA395FEB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CE9D45C2-DBB9-44FF-B732-683FCA395FEB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CE9D45C2-DBB9-44FF-B732-683FCA395FEB}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
