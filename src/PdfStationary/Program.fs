@@ -8,31 +8,27 @@ open iTextSharp.text.pdf
 
 [<EntryPoint>]
 let main argv =
-    let sourcePath = "/home/thomas/Downloads/invoice.pdf"
-    let templatePath = "/home/thomas/Downloads/stationary.pdf"
+    let sourcePath = "/Users/thomas/Downloads/source.pdf"
+    let templatePath = "/Users/thomas/Downloads/template.pdf"
+    let outputPath = sprintf "/Users/thomas/Downloads/tmp-%i.pdf" Environment.TickCount
     
-    let outputPath = sprintf "/home/thomas/Downloads/tmp-%i.pdf" Environment.TickCount
     use outputStream = new FileStream(outputPath, FileMode.Create)
     let document = Document()
     let writer = PdfWriter.GetInstance(document, outputStream)
+    
+    let sourceReader = PdfReader(sourcePath)
+    let templateReader = PdfReader(templatePath)
+    
     document.Open()
-    
-    let source = PdfReader(sourcePath)
-    let template = PdfReader(templatePath)
-    
-    document.SetPageSize(source.GetPageSizeWithRotation(1)) |> ignore
+    document.SetPageSize(sourceReader.GetPageSizeWithRotation(1)) |> ignore
     document.NewPage() |> ignore
     
-    let page1 = writer.GetImportedPage(source, 1)
-    writer.DirectContent.AddTemplate(page1, 0.0f, 0.0f)
-    
-    let page2 = writer.GetImportedPage(template, 1)
-    writer.DirectContent.AddTemplate(page2, 0.0f, 0.0f)
+    writer.DirectContent.AddTemplate(writer.GetImportedPage(sourceReader, 1), 0.0f, 0.0f)
+    writer.DirectContent.AddTemplate(writer.GetImportedPage(templateReader, 1), 0.0f, 0.0f)
     
     document.Close()
     writer.Close()
     outputStream.Close()
     
-    
-    printfn "Hello World from F#!"
-    0 // return an integer exit code
+    printfn "PDF successfully created!"
+    0
