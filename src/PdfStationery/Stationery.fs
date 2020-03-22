@@ -1,6 +1,7 @@
 namespace PdfStationery
 
 open System
+open System.IO
 open Elmish
 open Avalonia.FuncUI.DSL
 open Avalonia.Controls
@@ -71,8 +72,8 @@ module Stationery =
         let openSaveDialog arguments =
             async {
                 let dialog = SaveFileDialog()
-                dialog.InitialFileName <- System.IO.Path.GetFileName arguments.OriginalPath
-                dialog.Directory <- System.IO.Path.GetDirectoryName arguments.OriginalPath
+                dialog.InitialFileName <- Path.GetFileName arguments.OriginalPath
+                dialog.Directory <- Path.GetDirectoryName arguments.OriginalPath
                 dialog.DefaultExtension <- "pdf"
 
                 let! result = dialog.ShowAsync(parent) |> Async.AwaitTask
@@ -127,10 +128,10 @@ module Stationery =
             | None -> NoOp
             | Some result ->
                 printfn "Saving: %s" result.TargetPath
-                System.IO.File.Move(result.TmpPath, result.TargetPath, true)
+                File.Move(result.TmpPath, result.TargetPath, true)
                 Success
                     (sprintf "Your PDF has been decorated with your stationery and saved as `%s`."
-                         (System.IO.Path.GetFileName(result.TargetPath)))
+                         (Path.GetFileName(result.TargetPath)))
 
         let update msg model =
             match msg with
