@@ -14,10 +14,10 @@ open MessageBox.Avalonia.Enums
 open MessageBox.Avalonia.Models
 
 module Stationery =
-    type Model =
-        { ReplaceOriginal: bool
-          StationeryPdfPath: string
-          OriginalPdfPath: string }
+    type State =
+        { SourcePath: string
+          TemplatePath: string
+          ReplaceSource: bool }
 
     type SaveResult =
         { OriginalPath: string
@@ -28,9 +28,9 @@ module Stationery =
           TmpPath: string }
 
     type Msg =
-        | ToggleReplaceOriginal
+        | ToggleReplaceSource
         | OnStationaryPdfPathChanged of path: string
-        | OnOriginalPdfPathChanged of path: string
+        | OnSourcePathChanged of path: string
         | OnExceptionThrown of ex: Exception
         | CmdUpdateConfig
         | Success of message: string
@@ -44,13 +44,13 @@ module Stationery =
 
         let init() =
             let config = Config.get
-            { ReplaceOriginal = config.ReplaceSource
-              StationeryPdfPath = config.TemplatePath
-              OriginalPdfPath = config.SourcePath }, Cmd.none
+            { ReplaceSource = config.ReplaceSource
+              TemplatePath = config.TemplatePath
+              SourcePath = config.SourcePath }, Cmd.none
 
-        let canPrint model =
-            not (String.IsNullOrWhiteSpace(model.StationeryPdfPath))
-            && not (String.IsNullOrWhiteSpace(model.OriginalPdfPath))
+        let canPrint state =
+            not (String.IsNullOrWhiteSpace(state.TemplatePath))
+            && not (String.IsNullOrWhiteSpace(state.SourcePath))
 
         let openFileDialog currentPath =
             async {
@@ -117,11 +117,11 @@ module Stationery =
             }
 
 
-        let updateConfig model =
+        let updateConfig state =
             Config.set
-                { SourcePath = model.OriginalPdfPath
-                  TemplatePath = model.StationeryPdfPath
-                  ReplaceSource = model.ReplaceOriginal }
+                { SourcePath = state.SourcePath
+                  TemplatePath = state.TemplatePath
+                  ReplaceSource = state.ReplaceSource }
             NoOp
 
         let showError (ex: Exception) =
@@ -130,12 +130,12 @@ module Stationery =
         let showSuccess message =
             showMessage "Success" "Great!" message Icon.Success
 
-        let print model =
-            if model.ReplaceOriginal then
-                PdfMerge.replace model.OriginalPdfPath model.StationeryPdfPath
+        let print state =
+            if state.ReplaceSource then
+                PdfMerge.replace state.SourcePath state.TemplatePath
                 Success "Your original PDF file has been decorated with your stationery."
             else
-                let tmpPath = PdfMerge.createNew model.OriginalPdfPath model.StationeryPdfPath
+                let tmpPath = PdfMerge.createNew state.SourcePath state.TemplatePath
                 CmdSaveNewPdfDocument tmpPath
 
         let savePdf (saveResult: Foo option) =
@@ -148,30 +148,30 @@ module Stationery =
                     (sprintf "Your PDF has been decorated with your stationery and saved as `%s`."
                          (Path.GetFileName(result.TargetPath)))
 
-        let update msg model =
+        let update msg state =
             match msg with
-            | ToggleReplaceOriginal -> { model with ReplaceOriginal = not model.ReplaceOriginal }, Cmd.ofMsg CmdUpdateConfig
-            | OnStationaryPdfPathChanged path -> { model with StationeryPdfPath = path }, Cmd.ofMsg CmdUpdateConfig
-            | OnOriginalPdfPathChanged path -> { model with OriginalPdfPath = path }, Cmd.ofMsg CmdUpdateConfig
-            | CmdPrint -> model, Cmd.ofMsg (print model)
-            | CmdUpdateConfig -> model, Cmd.ofMsg (updateConfig model)
+            | ToggleReplaceSource -> { state with ReplaceSource = not state.ReplaceSource }, Cmd.ofMsg CmdUpdateConfig
+            | OnStationaryPdfPathChanged path -> { state with TemplatePath = path }, Cmd.ofMsg CmdUpdateConfig
+            | OnSourcePathChanged path -> { state with SourcePath = path }, Cmd.ofMsg CmdUpdateConfig
+            | CmdPrint -> state, Cmd.ofMsg (print state)
+            | CmdUpdateConfig -> state, Cmd.ofMsg (updateConfig state)
             | Success message ->
-                model, Cmd.OfAsync.either showSuccess message (fun _ -> NoOp) (fun _ -> NoOp)
+                state, Cmd.OfAsync.either showSuccess message (fun _ -> NoOp) (fun _ -> NoOp)
             | CmdOpenStationeryFileDialog ->
-                model,
-                Cmd.OfAsync.either openFileDialog model.StationeryPdfPath OnStationaryPdfPathChanged OnExceptionThrown
+                state,
+                Cmd.OfAsync.either openFileDialog state.TemplatePath OnStationaryPdfPathChanged OnExceptionThrown
             | CmdOpenOriginalFileDialog ->
-                model,
-                Cmd.OfAsync.either openFileDialog model.OriginalPdfPath OnOriginalPdfPathChanged OnExceptionThrown
+                state,
+                Cmd.OfAsync.either openFileDialog state.SourcePath OnSourcePathChanged OnExceptionThrown
             | CmdSaveNewPdfDocument path ->
-                model,
+                state,
                 Cmd.OfAsync.either openSaveDialog
-                    { OriginalPath = model.OriginalPdfPath
+                    { OriginalPath = state.SourcePath
                       TmpPath = path } savePdf OnExceptionThrown
-            | OnExceptionThrown ex -> model, Cmd.OfAsync.either showError ex (fun _ -> NoOp) (fun _ -> NoOp)
-            | NoOp -> model, Cmd.none
+            | OnExceptionThrown ex -> state, Cmd.OfAsync.either showError ex (fun _ -> NoOp) (fun _ -> NoOp)
+            | NoOp -> state, Cmd.none
 
-        let view model dispatch =
+        let view state dispatch =
             DockPanel.create
                 [ DockPanel.children
                     [ StackPanel.create
@@ -187,7 +187,7 @@ module Stationery =
                                       StackPanel.children
                                           [ TextBox.create
                                               [ TextBox.width 285.0
-                                                TextBox.text model.StationeryPdfPath
+                                                TextBox.text state.TemplatePath
                                                 TextBox.isEnabled false ]
                                             Button.create
                                                 [ Button.content "Select"
@@ -203,7 +203,7 @@ module Stationery =
                                       StackPanel.children
                                           [ TextBox.create
                                               [ TextBox.width 285.0
-                                                TextBox.text model.OriginalPdfPath
+                                                TextBox.text state.SourcePath
                                                 TextBox.isEnabled false ]
                                             Button.create
                                                 [ Button.content "Select"
@@ -218,11 +218,11 @@ module Stationery =
                                       StackPanel.spacing 10.0
                                       StackPanel.children
                                           [ CheckBox.create
-                                              [ CheckBox.isChecked model.ReplaceOriginal
-                                                CheckBox.onTapped (fun _ -> dispatch ToggleReplaceOriginal) ]
+                                              [ CheckBox.isChecked state.ReplaceSource
+                                                CheckBox.onTapped (fun _ -> dispatch ToggleReplaceSource) ]
                                             TextBlock.create
                                                 [ TextBlock.text "Replace Original PDF"
-                                                  TextBlock.onTapped (fun _ -> dispatch ToggleReplaceOriginal)
+                                                  TextBlock.onTapped (fun _ -> dispatch ToggleReplaceSource)
                                                   TextBlock.verticalAlignment VerticalAlignment.Center ] ] ]
 
                                 Separator.create [ Separator.height 5.0 ]
@@ -230,7 +230,7 @@ module Stationery =
                                 Button.create
                                     [ Button.content "Print"
                                       Button.onClick (fun _ -> dispatch CmdPrint)
-                                      Button.isEnabled (model |> canPrint) ] ] ] ] ]
+                                      Button.isEnabled (state |> canPrint) ] ] ] ] ]
 
         do
             Elmish.Program.mkProgram init update view
