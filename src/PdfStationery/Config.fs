@@ -22,11 +22,11 @@ let get =
         if not (File.Exists path) then File.WriteAllText(path, JsonConvert.SerializeObject ConfigValues.Default)
         JsonConvert.DeserializeObject<ConfigValues>(File.ReadAllText(getConfigPath()))
     with ex ->
-        printfn "Could not load config!"
+        printfn "Could not load config! %O" ex
         ConfigValues.Default
 
 let set values =
     try
         File.WriteAllText((getConfigPath()), JsonConvert.SerializeObject values)
     with ex ->
-        printfn "Could not write config!"
+        printfn "Could not write config! %O" ex
