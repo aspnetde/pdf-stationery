@@ -22,7 +22,7 @@ module Stationery =
     type SaveResult =
         { OriginalPath: string
           TmpPath: string }
-        
+
     type Foo =
         { TargetPath: string
           TmpPath: string }
@@ -32,6 +32,7 @@ module Stationery =
         | OnStationaryPdfPathChanged of path: string
         | OnOriginalPdfPathChanged of path: string
         | OnExceptionThrown of ex: Exception
+        | CmdUpdateConfig
         | Success of message: string
         | CmdPrint
         | CmdSaveNewPdfDocument of path: string
@@ -42,9 +43,10 @@ module Stationery =
     type Program(parent: HostWindow) =
 
         let init() =
-            { ReplaceOriginal = false
-              StationeryPdfPath = "/Users/thomas/Downloads/template.pdf"
-              OriginalPdfPath = "/Users/thomas/Downloads/source.pdf" }, Cmd.none
+            let config = Config.get
+            { ReplaceOriginal = config.ReplaceSource
+              StationeryPdfPath = config.TemplatePath
+              OriginalPdfPath = config.SourcePath }, Cmd.none
 
         let canPrint model =
             not (String.IsNullOrWhiteSpace(model.StationeryPdfPath))
@@ -68,7 +70,6 @@ module Stationery =
             }
 
 
-
         let openSaveDialog arguments =
             async {
                 let dialog = SaveFileDialog()
@@ -80,9 +81,15 @@ module Stationery =
                 return match result with
                        | null -> None
                        | path ->
-                           let path = if path.ToLowerInvariant().EndsWith ".pdf" then path else path + ".pdf"
-                           Some({ TargetPath = path; TmpPath = arguments.TmpPath })
+                           let path =
+                               if path.ToLowerInvariant().EndsWith ".pdf" then path
+                               else path + ".pdf"
+                           Some
+                               ({ TargetPath = path
+                                  TmpPath = arguments.TmpPath })
             }
+
+
 
 
         let showMessage title header message icon =
@@ -108,6 +115,14 @@ module Stationery =
                 |> Async.Ignore
                 |> ignore
             }
+
+
+        let updateConfig model =
+            Config.set
+                { SourcePath = model.OriginalPdfPath
+                  TemplatePath = model.StationeryPdfPath
+                  ReplaceSource = model.ReplaceOriginal }
+            NoOp
 
         let showError (ex: Exception) =
             showMessage "Error" "Oops, something went wrong:" ex.Message Icon.Error
@@ -135,10 +150,11 @@ module Stationery =
 
         let update msg model =
             match msg with
-            | ToggleReplaceOriginal -> { model with ReplaceOriginal = not model.ReplaceOriginal }, Cmd.none
-            | OnStationaryPdfPathChanged path -> { model with StationeryPdfPath = path }, Cmd.none
-            | OnOriginalPdfPathChanged path -> { model with OriginalPdfPath = path }, Cmd.none
+            | ToggleReplaceOriginal -> { model with ReplaceOriginal = not model.ReplaceOriginal }, Cmd.ofMsg CmdUpdateConfig
+            | OnStationaryPdfPathChanged path -> { model with StationeryPdfPath = path }, Cmd.ofMsg CmdUpdateConfig
+            | OnOriginalPdfPathChanged path -> { model with OriginalPdfPath = path }, Cmd.ofMsg CmdUpdateConfig
             | CmdPrint -> model, Cmd.ofMsg (print model)
+            | CmdUpdateConfig -> model, Cmd.ofMsg (updateConfig model)
             | Success message ->
                 model, Cmd.OfAsync.either showSuccess message (fun _ -> NoOp) (fun _ -> NoOp)
             | CmdOpenStationeryFileDialog ->
@@ -148,7 +164,10 @@ module Stationery =
                 model,
                 Cmd.OfAsync.either openFileDialog model.OriginalPdfPath OnOriginalPdfPathChanged OnExceptionThrown
             | CmdSaveNewPdfDocument path ->
-                model, Cmd.OfAsync.either openSaveDialog { OriginalPath = model.OriginalPdfPath; TmpPath = path } savePdf OnExceptionThrown
+                model,
+                Cmd.OfAsync.either openSaveDialog
+                    { OriginalPath = model.OriginalPdfPath
+                      TmpPath = path } savePdf OnExceptionThrown
             | OnExceptionThrown ex -> model, Cmd.OfAsync.either showError ex (fun _ -> NoOp) (fun _ -> NoOp)
             | NoOp -> model, Cmd.none
 
