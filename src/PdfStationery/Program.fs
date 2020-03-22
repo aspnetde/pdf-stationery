@@ -1,11 +1,9 @@
 ﻿namespace PdfStationery
 
-open Elmish
 open Avalonia
 open Avalonia.Controls
 open Avalonia.Controls.ApplicationLifetimes
 open Avalonia.FuncUI
-open Avalonia.FuncUI.Elmish
 open Avalonia.FuncUI.Components.Hosts
 
 type MainWindow() as this =
@@ -14,10 +12,8 @@ type MainWindow() as this =
         base.Title <- "PDF Stationery"
         base.SizeToContent <- SizeToContent.WidthAndHeight
         
-        Elmish.Program.mkSimple (fun () -> Stationery.init) Stationery.update Stationery.view
-        |> Program.withHost this
-        |> Program.withConsoleTrace
-        |> Program.run
+        Stationery.Program(this) |> ignore
+        ()
         
 type App() =
     inherit Application()
