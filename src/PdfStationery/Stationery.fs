@@ -78,7 +78,9 @@ module Stationery =
                 let! result = dialog.ShowAsync(parent) |> Async.AwaitTask
                 return match result with
                        | null -> None
-                       | path -> Some({ TargetPath = path; TmpPath = arguments.TmpPath })
+                       | path ->
+                           let path = if path.ToLowerInvariant().EndsWith ".pdf" then path else path + ".pdf"
+                           Some({ TargetPath = path; TmpPath = arguments.TmpPath })
             }
 
 
