@@ -6,20 +6,15 @@ open Avalonia.Layout
 
 module Stationery =
     type State =
-        { count: int }
+        { ReplaceOriginal: bool }
 
-    let init = { count = 0 }
+    let init = { ReplaceOriginal = false }
 
-    type Msg =
-        | Increment
-        | Decrement
-        | Reset
+    type Msg = ToggleReplaceOriginal
 
     let update (msg: Msg) (state: State): State =
         match msg with
-        | Increment -> { state with count = state.count + 1 }
-        | Decrement -> { state with count = state.count - 1 }
-        | Reset -> init
+        | ToggleReplaceOriginal -> { state with ReplaceOriginal = not state.ReplaceOriginal }
 
     let view (state: State) (dispatch) =
         DockPanel.create
@@ -59,13 +54,14 @@ module Stationery =
                                   StackPanel.width 390.0
                                   StackPanel.spacing 10.0
                                   StackPanel.children
-                                      [ CheckBox.create [ CheckBox.isChecked true ]
+                                      [ CheckBox.create
+                                          [ CheckBox.isChecked state.ReplaceOriginal
+                                            CheckBox.onTapped (fun _ -> dispatch ToggleReplaceOriginal) ]
                                         TextBlock.create
                                             [ TextBlock.text "Replace Original PDF"
+                                              TextBlock.onTapped (fun _ -> dispatch ToggleReplaceOriginal)
                                               TextBlock.verticalAlignment VerticalAlignment.Center ] ] ]
 
                             Separator.create [ Separator.height 5.0 ]
 
-                            Button.create
-                                [ Button.onClick (fun _ -> dispatch Reset)
-                                  Button.content "Print" ] ] ] ] ]
+                            Button.create [ Button.content "Print" ] ] ] ] ]
