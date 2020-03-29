@@ -50,7 +50,7 @@ module Stationery =
         let print state =
             if state.ReplaceSource then
                 Printer.replacePdf state.SourcePath state.TemplatePath
-                ShowSuccessMessage "Your original PDF file has been decorated with your stationery."
+                ShowSuccessMessage (SuccessMessageWithReplacement |> translate)
             else
                 let tmpPath = Printer.newPdf state.SourcePath state.TemplatePath
                 CmdSelectStorageLocationForNewPdf tmpPath
@@ -61,7 +61,7 @@ module Stationery =
             | Some result ->
                 File.Move(result.TmpPath, result.TargetPath, true)
                 ShowSuccessMessage
-                    (sprintf "Your PDF has been decorated with your stationery and saved as `%s`."
+                    (sprintf "%s: `%s`." (SuccessMessageWithIndividualPath |> translate)
                          (Path.GetFileName(result.TargetPath)))
 
         let noOp = (fun _ -> NoOp)
@@ -97,7 +97,7 @@ module Stationery =
                           StackPanel.spacing 5.0
                           StackPanel.children
                               [ TextBlock.create [
-                                  TextBlock.text "Stationery PDF"
+                                  TextBlock.text (FormTemplatePdfLabel |> translate)
                                   TextBlock.width 390.0
                                 ]
                                 StackPanel.create
@@ -110,13 +110,14 @@ module Stationery =
                                                 TextBox.text state.TemplatePath
                                                 TextBox.isEnabled false ]
                                             Button.create
-                                                [ Button.content "Select"
+                                                [ Button.content (FormSelectButton |> translate)
+                                                  Button.verticalAlignment VerticalAlignment.Center
                                                   Button.width 100.0
                                                   Button.onClick (fun _ -> dispatch CmdOpenFileDialogForSource) ] ] ]
                                 Separator.create [ Separator.height 5.0 ]
 
                                 TextBlock.create [
-                                    TextBlock.text "Original PDF"
+                                    TextBlock.text (FormOriginalPdfLabel |> translate)
                                     TextBlock.width 390.0
                                 ]
                                 StackPanel.create
@@ -129,8 +130,9 @@ module Stationery =
                                                 TextBox.text state.SourcePath
                                                 TextBox.isEnabled false ]
                                             Button.create
-                                                [ Button.content "Select"
+                                                [ Button.content (FormSelectButton |> translate)
                                                   Button.width 100.0
+                                                  Button.verticalAlignment VerticalAlignment.Center
                                                   Button.onClick (fun _ -> dispatch CmdOpenFileDialogForTemplate) ] ] ]
                                 Separator.create [ Separator.height 5.0 ]
 
@@ -143,13 +145,13 @@ module Stationery =
                                               [ CheckBox.isChecked state.ReplaceSource
                                                 CheckBox.onTapped (fun _ -> dispatch ToggleReplaceSource) ]
                                             TextBlock.create
-                                                [ TextBlock.text "Replace Original PDF"
+                                                [ TextBlock.text (FormReplacementLabel |> translate)
                                                   TextBlock.onTapped (fun _ -> dispatch ToggleReplaceSource)
                                                   TextBlock.verticalAlignment VerticalAlignment.Center ] ] ]
                                 Separator.create [ Separator.height 5.0 ]
 
                                 Button.create
-                                    [ Button.content "Print"
+                                    [ Button.content (FormPrintButton |> translate)
                                       Button.width 390.0
                                       Button.onClick (fun _ -> dispatch CmdPrint)
                                       Button.isEnabled (state |> canPrint) ] ] ] ] ]

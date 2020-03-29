@@ -9,7 +9,7 @@ open Avalonia.FuncUI.Components.Hosts
 type MainWindow() as this =
     inherit HostWindow()
     do
-        base.Title <- "PDF Stationery"
+        base.Title <- DialogTitle |> translate
         base.SizeToContent <- SizeToContent.WidthAndHeight
 
         Stationery.Program(this) |> ignore

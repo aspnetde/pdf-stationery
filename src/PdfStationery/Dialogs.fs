@@ -33,16 +33,16 @@ let private showMessage title header message icon =
     }
 
 let showError (ex: Exception) =
-    showMessage "Error" "Oops, something went wrong:" ex.Message Icon.Error
+    showMessage (Error |> translate) (ErrorMessage |> translate) ex.Message Icon.Error
 
 let showSuccess message =
-    showMessage "Success" "Great!" message Icon.Success
+    showMessage (Success |> translate) (SuccessMessage |> translate) message Icon.Success
 
 let openFileDialog args =
     let currentPath, parent = args
     async {
         let filter = FileDialogFilter()
-        filter.Name <- "PDF Documents"
+        filter.Name <- PdfDocumentFilter |> translate
         filter.Extensions.Add("pdf")
 
         let dialog = OpenFileDialog()
@@ -54,7 +54,7 @@ let openFileDialog args =
         return match result with
                | [||] -> currentPath
                | [| newPath |] -> newPath
-               | _ -> failwith "Please select only a single PDF document."
+               | _ -> failwith "This should never have happened. Please select only a single PDF document."
     }
 
 type SaveDialogArguments =

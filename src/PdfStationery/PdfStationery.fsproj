@@ -7,6 +7,7 @@
 
     <ItemGroup>
         <Compile Include="Config.fs" />
+        <Compile Include="Text.fs" />
         <Compile Include="Dialogs.fs" />
         <Compile Include="Printer.fs" />
         <Compile Include="Stationery.fs" />
