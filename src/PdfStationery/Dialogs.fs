@@ -68,8 +68,15 @@ type SaveDialogResult =
 let openSaveDialog args =
     let args, parent = args
     async {
+        let initialFileName = Path.GetFileName args.SourcePath
+        let initialFileName =
+            if initialFileName.ToLowerInvariant().EndsWith ".pdf" then
+                initialFileName
+            else
+                initialFileName + ".pdf"
+                
         let dialog = SaveFileDialog()
-        dialog.InitialFileName <- Path.GetFileName args.SourcePath
+        dialog.InitialFileName <- initialFileName
         dialog.Directory <- Path.GetDirectoryName args.SourcePath
         dialog.DefaultExtension <- "pdf"
 
