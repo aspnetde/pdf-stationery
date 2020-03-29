@@ -96,7 +96,10 @@ module Stationery =
                           StackPanel.margin 15.0
                           StackPanel.spacing 5.0
                           StackPanel.children
-                              [ TextBlock.create [ TextBlock.text "Stationery PDF" ]
+                              [ TextBlock.create [
+                                  TextBlock.text "Stationery PDF"
+                                  TextBlock.width 390.0
+                                ]
                                 StackPanel.create
                                     [ StackPanel.orientation Orientation.Horizontal
                                       StackPanel.width 390.0
@@ -112,7 +115,10 @@ module Stationery =
                                                   Button.onClick (fun _ -> dispatch CmdOpenFileDialogForSource) ] ] ]
                                 Separator.create [ Separator.height 5.0 ]
 
-                                TextBlock.create [ TextBlock.text "Original PDF" ]
+                                TextBlock.create [
+                                    TextBlock.text "Original PDF"
+                                    TextBlock.width 390.0
+                                ]
                                 StackPanel.create
                                     [ StackPanel.orientation Orientation.Horizontal
                                       StackPanel.width 390.0
@@ -144,6 +150,7 @@ module Stationery =
 
                                 Button.create
                                     [ Button.content "Print"
+                                      Button.width 390.0
                                       Button.onClick (fun _ -> dispatch CmdPrint)
                                       Button.isEnabled (state |> canPrint) ] ] ] ] ]
 
