@@ -1,6 +1,7 @@
 [<AutoOpen>]
 module PdfStationery.Config
 
+open System
 open System.IO
 open Newtonsoft.Json
 
@@ -14,19 +15,20 @@ type ConfigValues =
           ReplaceSource = false }
 
 let private getConfigPath() =
-    Path.Combine(Directory.GetCurrentDirectory(), "config.json")
-
-let get =
-    try
-        let path = getConfigPath()
-        if not (File.Exists path) then File.WriteAllText(path, JsonConvert.SerializeObject ConfigValues.Default)
-        JsonConvert.DeserializeObject<ConfigValues>(File.ReadAllText(getConfigPath()))
-    with ex ->
-        printfn "Could not load config! %O" ex
-        ConfigValues.Default
+    let folder = Environment.GetFolderPath Environment.SpecialFolder.LocalApplicationData
+    Path.Combine(folder, "config.json")
 
 let set values =
     try
         File.WriteAllText((getConfigPath()), JsonConvert.SerializeObject values)
     with ex ->
         printfn "Could not write config! %O" ex
+        
+let get =
+    try
+        let path = getConfigPath()
+        if not (File.Exists path) then ConfigValues.Default |> set
+        JsonConvert.DeserializeObject<ConfigValues>(File.ReadAllText(getConfigPath()))
+    with ex ->
+        printfn "Could not load config! %O" ex
+        ConfigValues.Default
