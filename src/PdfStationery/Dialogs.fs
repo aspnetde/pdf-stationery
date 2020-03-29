@@ -42,6 +42,7 @@ let openFileDialog args =
     let currentPath, parent = args
     async {
         let filter = FileDialogFilter()
+        filter.Name <- "PDF Documents"
         filter.Extensions.Add("pdf")
 
         let dialog = OpenFileDialog()
