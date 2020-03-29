@@ -18,7 +18,7 @@ type Text =
 [<AutoOpen>]
 module Text =
 
-    open System.Globalization
+    open System.Threading
 
     let private getTranslations text =
         match text with
@@ -43,8 +43,8 @@ module Text =
     let translate text =
         try
             let en, de = text |> getTranslations
-            if CultureInfo.CurrentUICulture.Name.StartsWith "en" then en
-            else de
+            if Thread.CurrentThread.CurrentCulture.Name.StartsWith "de" then de
+            else en
         with ex ->
             printfn "Text could not be translated: %s" ex.Message
             "n/a"
