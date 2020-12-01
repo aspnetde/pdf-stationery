@@ -36,7 +36,7 @@ let showError (ex: Exception) =
     showMessage (Error |> translate) (ErrorMessage |> translate) ex.Message Icon.Error
 
 let showSuccess message =
-    showMessage (Success |> translate) (SuccessMessage |> translate) message Icon.Success
+    showMessage (Success |> translate) (SuccessMessage |> translate) message Icon.Warning
 
 let openFileDialog args =
     let currentPath, parent = args
